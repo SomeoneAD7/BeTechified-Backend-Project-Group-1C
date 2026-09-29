@@ -28,18 +28,18 @@ let tasks = [
 const validateCreateTask = (req, res, next) => {
   const { title, description, status } = req.body;
 
-  if (!title || title === "")
+  if (typeof title !== "string" || title.trim() === "")
     return res.status(400).json({ error: "Missing title" });
-  if (!description || description === "")
+  if (typeof description !== "string" || description.trim() === "")
     return res.status(400).json({ error: "Missing description" });
 
-  if (status) {
+  if (typeof status === "string") {
     const taskStatus = status.toLowerCase();
     if (taskStatus !== "pending" && taskStatus !== "completed")
       return res.status(400).json({
         error: 'Invalid status! \nMust be \"pending\" or \"completed\". ',
       });
-  } else return res.status(400).json({ error: "Missing status" });
+  } else return res.status(400).json({ error: "Missing or invalid status" });
 
   next();
 };
@@ -47,9 +47,14 @@ const validateCreateTask = (req, res, next) => {
 const validateUpdateTask = (req, res, next) => {
   const { status } = req.body;
 
-  if (status) {
+  if (status !== undefined) {
+    if (typeof status !== "string")
+      return res.status(400).json({
+        error: 'Invalid status! \nMust be "pending" or "completed". ',
+      });
+
     const taskStatus = status.toLowerCase();
-    if (taskStatus !== "pending" || taskStatus !== "completed")
+    if (taskStatus !== "pending" && taskStatus !== "completed")
       return res.status(400).json({
         error: 'Invalid status! \nMust be "pending" or "completed". ',
       });
@@ -109,8 +114,8 @@ const deleteTask = (req, res) => {
 app.get("/api/tasks", getAllTasks);
 app.get("/api/tasks/:id", getOneTask);
 app.post("/api/tasks", validateCreateTask, createTask);
-app.put("/api/tasks/:id", updateTask, validateUpdateTask);
-app.patch("/api/tasks/:id", updateTask);
+app.put("/api/tasks/:id", validateUpdateTask, updateTask);
+app.patch("/api/tasks/:id", validateUpdateTask, updateTask);
 app.delete("/api/tasks/:id", deleteTask);
 
 const errorHandler = (err, req, res, next) => {
@@ -119,6 +124,10 @@ const errorHandler = (err, req, res, next) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`APP is listening on Port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`APP is listening on Port ${PORT}`);
+  });
+}
+
+module.exports = app;
