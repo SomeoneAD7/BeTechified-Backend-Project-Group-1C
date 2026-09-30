@@ -4,7 +4,8 @@
   "main": "taskManagerAPI.js",
   "scripts": {
     "start": "node taskManagerAPI.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "test": "node --test"
   },
   "dependencies": {
     "dotenv": "^18.0.4",
